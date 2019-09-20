@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: plex-server-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  namespace: plex
+spec:
+  rules:
+  - host: kbmanseau.asuscomm.com
+    http:
+      paths:
+      - path: /plex
+        backend:
+          serviceName: plex-kube-plex
+          servicePort: pms

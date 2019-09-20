@@ -1,0 +1,60 @@
+---
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: sonarr-deployment
+   labels:
+     app: sonarr
+   namespace: plex
+ spec:
+   replicas: 1
+   selector:
+      matchLabels:
+        app: sonarr
+   template:
+     metadata:
+       labels:
+         app: sonarr
+ 
+     spec:
+      containers:
+         - name: sonarr
+           image: linuxserver/sonarr
+           env:
+           - name: PUID
+             value: "1000"
+           - name: PGID
+             value: "1000"
+           ports:
+             - containerPort: 8989
+           volumeMounts:
+             - mountPath: /config
+               name: sonarr-config
+             - mountPath: /downloads
+               name: radarr-downloads
+             - mountPath: /tv
+               name: sonarr-tv
+      volumes:
+        - name: sonarr-config
+          hostPath:
+            path: /mergerFS/cachePool/sonarr/config
+        - name: radarr-downloads
+          hostPath:
+            path: /mergerFS/cachePool/downloads/complete
+        - name: sonarr-tv
+          hostPath:
+            path: /mergerFS/pool/media/tv
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: sonarr-service
+  namespace: plex
+spec:
+  selector:
+    app: sonarr
+  ports:
+  - protocol: TCP
+    port: 8989
+    targetPort: 8989
+  type: ClusterIP

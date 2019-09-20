@@ -1,0 +1,60 @@
+---
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: radarr-deployment
+   labels:
+     app: radarr
+   namespace: plex
+ spec:
+   replicas: 1
+   selector:
+      matchLabels:
+        app: radarr
+   template:
+     metadata:
+       labels:
+         app: radarr
+ 
+     spec:
+      containers:
+         - name: radarr
+           image: linuxserver/radarr
+           env:
+           - name: PUID
+             value: "1000"
+           - name: PGID
+             value: "1000"
+           ports:
+             - containerPort: 7878
+           volumeMounts:
+             - mountPath: /config
+               name: radarr-config
+             - mountPath: /downloads
+               name: radarr-downloads
+             - mountPath: /movies
+               name: radarr-movies
+      volumes:
+        - name: radarr-config
+          hostPath:
+            path: /mergerFS/cachePool/radarr/config
+        - name: radarr-downloads
+          hostPath:
+            path: /mergerFS/cachePool/downloads/complete
+        - name: radarr-movies
+          hostPath:
+            path: /mergerFS/pool/media/movies
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: radarr-service
+  namespace: plex
+spec:
+  selector:
+    app: radarr
+  ports:
+  - protocol: TCP
+    port: 7878
+    targetPort: 7878
+  type: ClusterIP
