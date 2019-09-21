@@ -1,0 +1,4 @@
+https://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html
+
+make sure to lavel the namespace!!!
+kubectl label namespace cert-manager certmanager.k8s.io/disable-validation=true
