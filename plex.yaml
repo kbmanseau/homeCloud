@@ -3,6 +3,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: pms
+  namespace: plex
 spec:
   replicas: 1
   template:
@@ -30,7 +31,6 @@ spec:
           mountPath: /transcode
         - name: media
           mountPath: /media
-          readonly: true
         env:
         - name: PLEX_UID
           value: '1000'
@@ -38,6 +38,10 @@ spec:
           value: '1000'
         - name: TZ
           value: 'America/New_York'
+        - name: VERSION
+          value: "latest"
+        - name: PLEX_CLAIM
+          value: "claim-bfj8YSAC43emfnLcwTty"
         ports:
         - name: pms
           containerPort: 32400
@@ -74,5 +78,5 @@ spec:
     port: 443
     protocol: TCP
     targetPort: 32443
-  type: ClusterIP
+  type: NodePort
 

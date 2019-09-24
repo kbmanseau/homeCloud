@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: plex-sab-rad-son
+  name: sab-rad-son
   annotations:
     kubernetes.io/ingress.class: "nginx"    
     certmanager.k8s.io/cluster-issuer: "letsencrypt"
@@ -19,9 +19,6 @@ spec:
   - hosts:
     - radarr.kbmanseau.com
     secretName: radarr-tls
-  - hosts:
-    - plex.kbmanseau.com
-    secretName: plex-tls
   rules:
   - host: sabnzbd.kbmanseau.com
     http:
@@ -44,11 +41,4 @@ spec:
         backend:
           serviceName: radarr-service
           servicePort: 7878
-  - host: plex.kbmanseau.com
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: plex-kube-plex 
-          servicePort: 32400
 
