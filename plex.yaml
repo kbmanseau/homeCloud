@@ -1,3 +1,4 @@
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -50,3 +51,28 @@ spec:
             port: pms
           initialDelaySeconds: 15
           periodSeconds: 20
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: plex-service
+  namespace: plex
+spec:
+  selector:
+    app: pms
+  ports:
+  - name: pms
+    nodePort: 52252
+    port: 32400
+    protocol: TCP
+    targetPort: pms
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pms
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 32443
+  type: ClusterIP
+
