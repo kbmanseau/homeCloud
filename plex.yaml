@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pms
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pms
+    spec:
+      volumes:
+      - name: config
+        hostPath:
+          path: /mergerFS/cachePool/plex/config
+      - name: media
+        hostPath:
+          path: /mergerFS/pool/media
+      - name: transcode
+        hostPath:
+          path: /mergerFS/cachePool/plex/transcode
+      containers:
+      - name: pms
+        image: linuxserver/plex 
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: transcode
+          mountPath: /transcode
+        - name: media
+          mountPath: /media
+          readonly: true
+        env:
+        - name: PLEX_UID
+          value: '1000'
+        - name: PLEX_GID
+          value: '1000'
+        - name: TZ
+          value: 'America/New_York'
+        ports:
+        - name: pms
+          containerPort: 32400
+        readinessProbe:
+          tcpSocket:
+            port: pms
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: pms
+          initialDelaySeconds: 15
+          periodSeconds: 20
