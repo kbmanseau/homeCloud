@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubeflow
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    certmanager.k8s.io/cluster-issuer: "letsencrypt"
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+  namespace: istio-system
+
+spec:
+  tls:
+  - hosts:
+    - kubeflow.kbmanseau.com
+    secretName: kubeflow-tls
+  rules:
+  - host: kubeflow.kbmanseau.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: istio-ingressgateway
+          servicePort: 80

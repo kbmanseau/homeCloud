@@ -41,4 +41,3 @@ spec:
         backend:
           serviceName: radarr-service
           servicePort: 7878
-
