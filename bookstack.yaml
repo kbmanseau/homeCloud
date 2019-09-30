@@ -1,0 +1,114 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: bookstack
+  labels:
+    name: bookstack
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: bookstack
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      volumes:
+      - name: config
+        hostPath:
+          path: /mergerFS/pool/bookstack/mariadb
+      containers:
+      - name: mariadb
+        image: linuxserver/mariadb
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        env:
+        - name: PUID
+          value: '1000'
+        - name: PGID
+          value: '1000'
+        - name: TZ
+          value: 'America/New_York'
+        - name: MYSQL_ROOT_PASSWORD
+          value: 'temp123'
+        - name: MYSQL_DATABASE
+          value: 'bookstackapp'
+        - name: MYSQL_USER
+          value: "bookstack"
+        - name: MYSQL_PASSWORD
+          value: "temp123"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mariadb-service
+  namespace: bookstack
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+  clusterIP: None
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: bookstack
+  namespace: bookstack
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bookstack
+    spec:
+      volumes:
+      - name: config
+        hostPath:
+          path: /mergerFS/pool/bookstack/bookstack_config
+      containers:
+      - name: bookstack
+        image: linuxserver/bookstack
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        env:
+        - name: PUID
+          value: '1000'
+        - name: PGID
+          value: '1000'
+        - name: DB_HOST
+          value: 'mariadb-service'
+        - name: DB_USER
+          value: "bookstack"
+        - name: DB_PASS
+          value: "temp123"
+        - name: DB_DATABASE
+          value: "bookstackapp"
+        - name: APP_URL
+          value: "https://bookstack.kbmanseau.com"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: bookstack-service
+  namespace: bookstack
+spec:
+  selector:
+    app: bookstack
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  type: NodePort
