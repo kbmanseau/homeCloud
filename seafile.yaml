@@ -1,0 +1,104 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: seafile
+  labels:
+    name: seafile
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: seafile
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: seafile
+    spec:
+      volumes:
+      - name: config
+        hostPath:
+          path: /mergerFS/pool/seafile/mariadb
+      containers:
+      - name: mariadb
+        image: mariadb:10.1
+        volumeMounts:
+        - name: config
+          mountPath: /var/lib/mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: 'temp123'
+        - name: MYSQL_LOG_CONSOLE
+          value: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mariadb-service
+  namespace: seafile
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+  clusterIP: None
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: bookstack
+  namespace: bookstack
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bookstack
+    spec:
+      volumes:
+      - name: config
+        hostPath:
+          path: /mergerFS/pool/bookstack/bookstack_config
+      containers:
+      - name: bookstack
+        image: linuxserver/bookstack
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        env:
+        - name: PUID
+          value: '1000'
+        - name: PGID
+          value: '1000'
+        - name: DB_HOST
+          value: 'mariadb-service'
+        - name: DB_USER
+          value: "bookstack"
+        - name: DB_PASS
+          value: "temp123"
+        - name: DB_DATABASE
+          value: "bookstackapp"
+        - name: APP_URL
+          value: "https://bookstack.kbmanseau.com"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: bookstack-service
+  namespace: bookstack
+spec:
+  selector:
+    app: bookstack
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  type: NodePort

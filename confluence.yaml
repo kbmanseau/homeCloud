@@ -1,0 +1,97 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: atlassian
+  labels:
+    name: atlassian
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: confluence
+  namespace: atlassian
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: confluence
+    spec:
+      volumes:
+      - name: app-data
+        hostPath:
+          path: /mergerFS/pool/atlassian/confluence_data
+      containers:
+      - name: confluence
+        image: atlassian/confluence-server
+        volumeMounts:
+        - name: app-data
+          mountPath: /var/atlassian/application-data/confluence
+        env:
+        - name: ATL_PROXY_NAME
+          value: 'wiki.kbmanseau.com'
+        - name: ATL_PROXY_PORT
+          value: '443'
+        - name: ATL_TOMCAT_SCHEME
+          value: 'https'
+        - name: ATL_TOMCAT_SECURE
+          value: 'true'
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: confluence-service
+  namespace: atlassian
+spec:
+  selector:
+    app: confluence
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8090
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: atlassian
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      volumes:
+      - name: data
+        hostPath:
+          path: /mergerFS/pool/atlassian/postgres
+      containers:
+      - name: postgres
+        image: postgres
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data/pgdata
+        env:
+        - name: POSTGRES_PASSWORD
+          value: 'temp123'
+        - name: PGDATA
+          value: '/var/lib/postgresql/data/pgdata'
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgres-service
+  namespace: atlassian
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: psql
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+  clusterIP: None
