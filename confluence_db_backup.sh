@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#sudo crontab -e
+#0 * * * * /home/kbmanseau/homeCloud/confluence_db_backup.sh
 HOME=/root
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LANG=en_US.UTF-8

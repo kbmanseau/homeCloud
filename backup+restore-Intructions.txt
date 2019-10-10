@@ -1,0 +1,24 @@
+#scale down confluence
+sudo rm -rf /mergerFS/pool/temp-atlassian/confluence_data/
+sudo cp -r /mergerFS/pool/atlassian/confluence_data/ /mergerFS/pool/temp-atlassian/
+
+#Delete confluence secrets 
+kubectl delete secrets -n temp-atlassian confluence-tls
+kubectl delete secrets -n temp-atlassian default-token-f8x27
+
+#Get database backup
+kubectl exec -it -n atlassian $(kubectl get pod -n atlassian -l "app=postgres" -o name | sed 's/pod\///') -- /usr/bin/pg_dump -U postgres confluence > confluence.out
+
+#Copy backup into datbase pod
+kubectl cp -n temp-atlassian confluence.out postgres-6b4c84c9df-5cjk4:/confluence.out
+
+#Exec into pod and restore DB
+#Drop old db
+psql -U postgres
+drop database confluence;
+create database confluence;
+grant ALL on DATABASE confluence to confluence;
+\q
+psql -U postgres -f confluence.out confluence
+exit
+kubectl scale -n temp-atlassian deployment confluence --replicas=1
