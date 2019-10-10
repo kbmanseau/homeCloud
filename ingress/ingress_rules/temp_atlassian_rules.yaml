@@ -1,0 +1,34 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: confluence
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    certmanager.k8s.io/cluster-issuer: "letsencrypt"
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+  namespace: temp-atlassian
+
+spec:
+  tls:
+  - hosts:
+    - temp.kbmanseau.com
+    secretName: confluence-tls
+  - hosts:
+    - temp-jira.kbmanseau.com
+    secretName: jira-tls
+  rules:
+  - host: temp.kbmanseau.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: confluence-service
+          servicePort: 443
+  - host: temp-jira.kbmanseau.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jira-service
+          servicePort: 443
+

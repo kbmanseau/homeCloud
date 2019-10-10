@@ -6,6 +6,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     certmanager.k8s.io/cluster-issuer: "letsencrypt"
     ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.org/client-max-body-size: "50m"
   namespace: atlassian
 
 spec:
@@ -13,6 +14,9 @@ spec:
   - hosts:
     - wiki.kbmanseau.com
     secretName: confluence-tls
+  - hosts:
+    - jira.kbmanseau.com
+    secretName: jira-tls
   rules:
   - host: wiki.kbmanseau.com
     http:
@@ -21,3 +25,11 @@ spec:
         backend:
           serviceName: confluence-service
           servicePort: 443
+  - host: jira.kbmanseau.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jira-service
+          servicePort: 443
+

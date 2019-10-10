@@ -6,6 +6,51 @@ metadata:
   labels:
     name: atlassian
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: confluence-service
+  namespace: atlassian
+spec:
+  selector:
+    app: confluence
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8090
+  type: NodePort
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgres-service
+  namespace: atlassian
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: psql
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+  clusterIP: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jira-service
+  namespace: atlassian
+spec:
+  selector:
+    app: jira
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8080
+  type: NodePort
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -38,20 +83,35 @@ spec:
         - name: ATL_TOMCAT_SECURE
           value: 'true'
 ---
-kind: Service
-apiVersion: v1
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
-  name: confluence-service
+  name: jira
   namespace: atlassian
 spec:
-  selector:
-    app: confluence
-  ports:
-  - name: https
-    port: 443
-    protocol: TCP
-    targetPort: 8090
-  type: NodePort
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jira
+    spec:
+      volumes:
+      - name: app-data
+        hostPath:
+          path: /mergerFS/pool/atlassian/jira_data
+      containers:
+      - name: jira
+        image: cptactionhank/atlassian-jira
+        volumeMounts:
+        - name: app-data
+          mountPath: /var/atlassian/application-data/jira
+        env:
+        - name: X_PROXY_NAME
+          value: 'jira.kbmanseau.com'
+        - name: X_PROXY_PORT
+          value: '443'
+        - name: X_PROXY_SCHEME
+          value: 'https'
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -71,7 +131,7 @@ spec:
           path: /mergerFS/pool/atlassian/postgres
       containers:
       - name: postgres
-        image: postgres
+        image: postgres:9.6
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data/pgdata
@@ -80,18 +140,3 @@ spec:
           value: 'temp123'
         - name: PGDATA
           value: '/var/lib/postgresql/data/pgdata'
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: postgres-service
-  namespace: atlassian
-spec:
-  selector:
-    app: postgres
-  ports:
-  - name: psql
-    port: 5432
-    protocol: TCP
-    targetPort: 5432
-  clusterIP: None
