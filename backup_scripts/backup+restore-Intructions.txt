@@ -1,8 +1,20 @@
 #scale down confluence
+#scale down jira
 sudo rm -rf /mergerFS/pool/temp-atlassian/confluence_data/
-sudo cp -r /mergerFS/pool/atlassian/confluence_data/ /mergerFS/pool/temp-atlassian/
+sudo rm -rf /mergerFS/pool/temp-atlassian/jira_data/
 
-#Delete confluence secrets 
+#Move the tar archive into a temp folder
+tar -xvf 2019-10-27.tar --strip-components=5
+tar -xvf 15\:50-confluencehome.tar --force-local --strip-components=3
+tar -xvf 15\:50-jirahome.tar --force-local --strip-components=3
+
+sudo cp -r confluence_data/ /mergerFS/pool/temp-atlassian/
+sudo cp -r jira_data/ /mergerFS/pool/temp-atlassian/
+
+#The Jira home directory on the host system must be owned by UID 2, in the docker container this maps to the daemon user
+sudo chown -R 2:2 /mergerFS/pool/temp-atlassian/jira_data/
+
+#Delete confluence secrets (maybe)
 kubectl delete secrets -n temp-atlassian confluence-tls
 kubectl delete secrets -n temp-atlassian default-token-f8x27
 
@@ -10,7 +22,8 @@ kubectl delete secrets -n temp-atlassian default-token-f8x27
 kubectl exec -it -n atlassian $(kubectl get pod -n atlassian -l "app=postgres" -o name | sed 's/pod\///') -- /usr/bin/pg_dump -U postgres confluence > confluence.out
 
 #Copy backup into datbase pod
-kubectl cp -n temp-atlassian confluence.out postgres-6b4c84c9df-5cjk4:/confluence.out
+k cp -n temp-atlassian 15:50-confluencedb.out postgres-6b4c84c9df-sj65m:/confluence.out
+k cp -n temp-atlassian 15:50-jiradb.out postgres-6b4c84c9df-sj65m:/jira.out
 
 #Exec into pod and restore DB
 #Drop old db

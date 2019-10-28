@@ -104,7 +104,7 @@ spec:
         image: cptactionhank/atlassian-jira
         volumeMounts:
         - name: app-data
-          mountPath: /var/atlassian/application-data/jira
+          mountPath: /var/atlassian/jira
         env:
         - name: X_PROXY_NAME
           value: 'jira-temp.kbmanseau.com'

@@ -82,6 +82,8 @@ spec:
           value: 'https'
         - name: ATL_TOMCAT_SECURE
           value: 'true'
+        - name: TZ
+          value: 'America/New_York'
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -104,7 +106,7 @@ spec:
         image: cptactionhank/atlassian-jira
         volumeMounts:
         - name: app-data
-          mountPath: /var/atlassian/application-data/jira
+          mountPath: /var/atlassian/jira
         env:
         - name: X_PROXY_NAME
           value: 'jira.kbmanseau.com'
